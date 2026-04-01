@@ -89,9 +89,9 @@ if result[1] > 0.05:
 else:
     logger.info("The time series is stationary.")
 
-ADF Statistic: -0.5022
-P-Value: 0.8916
-The time series is non-stationary.
+# ADF Statistic: -0.5022
+# P-Value: 0.8916
+# The time series is non-stationary.
 
 """
 Autocorrelation and Partial Autocorrelation

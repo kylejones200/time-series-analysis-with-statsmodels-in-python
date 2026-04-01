@@ -5,10 +5,10 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from src.core import (
-import logging
+# import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+# logging.basicConfig(level=logging.INFO, format='%(message)s')
 
     generate_synthetic_data,
     split_data,
