@@ -169,7 +169,7 @@ def plot_decomposition(decomposition, output_path: Path):
     
     for ax in fig.axes:
     
-    plt.suptitle("Time Series Decomposition: Trend, Seasonal, and Residual Components", 
+        plt.suptitle("Time Series Decomposition: Trend, Seasonal, and Residual Components", 
                  fontsize=12, y=0.98, color='0.2')
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.savefig(output_path, dpi=100, bbox_inches="tight")
@@ -184,7 +184,7 @@ def plot_acf_pacf(series: pd.Series, lags: int = 30, output_path: Path = None):
     
     for ax in axes:
     
-    plt.suptitle("Autocorrelation and Partial Autocorrelation Functions", 
+        plt.suptitle("Autocorrelation and Partial Autocorrelation Functions", 
                  fontsize=12, y=0.98, color='0.2')
     plt.tight_layout()
     
@@ -199,7 +199,7 @@ def plot_residuals_diagnostics(model, output_path: Path):
     
     for ax in fig.axes:
     
-    plt.suptitle("ARIMA Model Residual Diagnostics", fontsize=12, y=0.98, color='0.2')
+        plt.suptitle("ARIMA Model Residual Diagnostics", fontsize=12, y=0.98, color='0.2')
     plt.tight_layout()
     plt.savefig(output_path, dpi=100, bbox_inches="tight")
     plt.close()
