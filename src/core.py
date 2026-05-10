@@ -100,17 +100,18 @@ def plot_time_series(
     output_path: Path
 ):
     """Plot time series with training and hold-out sets."""
-    fig, ax = plt.subplots(figsize=(10, 6))
+    if plot:
+        fig, ax = plt.subplots(figsize=(10, 6))
     
-    ax.plot(df.index, df["value"], label="Full Dataset", color="#4A90A4", linewidth=1.2)
-    ax.plot(hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="#8B6F9E", linewidth=1.2)
+        ax.plot(df.index, df["value"], label="Full Dataset", color="#4A90A4", linewidth=1.2)
+        ax.plot(hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="#8B6F9E", linewidth=1.2)
     
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Value")
-    ax.legend(loc='best')
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Value")
+        ax.legend(loc='best')
     
-    plt.savefig(output_path, dpi=100, bbox_inches="tight")
-    plt.close()
+        plt.savefig(output_path, dpi=100, bbox_inches="tight")
+        plt.close()
 
 def plot_arima_forecast(
     train: pd.DataFrame,
@@ -120,26 +121,27 @@ def plot_arima_forecast(
     output_path: Path
 ):
     """Plot ARIMA forecast results."""
-    fig, ax = plt.subplots(figsize=(10, 6))
+    if plot:
+        fig, ax = plt.subplots(figsize=(10, 6))
     
-    ax.plot(train.index, train["value"], label="Training Data", color="#4A90A4", linewidth=1.2)
-    ax.plot(hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="#8B6F9E", linewidth=1.2)
-    ax.plot(forecast['index'], forecast['mean'], label="ARIMA Forecast", color="#D4A574", linewidth=1.2)
-    ax.fill_between(
-        forecast['index'],
-        forecast['conf_int'].iloc[:, 0],
-        forecast['conf_int'].iloc[:, 1],
-        color="#D4A574",
-        alpha=0.12,
-        label="95% Confidence Interval"
-    )
+        ax.plot(train.index, train["value"], label="Training Data", color="#4A90A4", linewidth=1.2)
+        ax.plot(hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="#8B6F9E", linewidth=1.2)
+        ax.plot(forecast['index'], forecast['mean'], label="ARIMA Forecast", color="#D4A574", linewidth=1.2)
+        ax.fill_between(
+            forecast['index'],
+            forecast['conf_int'].iloc[:, 0],
+            forecast['conf_int'].iloc[:, 1],
+            color="#D4A574",
+            alpha=0.12,
+            label="95% Confidence Interval"
+        )
     
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Value")
-    ax.legend(loc='best')
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Value")
+        ax.legend(loc='best')
     
-    plt.savefig(output_path, dpi=100, bbox_inches="tight")
-    plt.close()
+        plt.savefig(output_path, dpi=100, bbox_inches="tight")
+        plt.close()
 
 def plot_holt_winters_forecast(
     train: pd.DataFrame,
@@ -149,18 +151,19 @@ def plot_holt_winters_forecast(
     output_path: Path
 ):
     """Plot Holt-Winters forecast results."""
-    fig, ax = plt.subplots(figsize=(10, 6))
+    if plot:
+        fig, ax = plt.subplots(figsize=(10, 6))
     
-    ax.plot(train.index, train["value"], label="Training Data", color="#4A90A4", linewidth=1.2)
-    ax.plot(hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="#8B6F9E", linewidth=1.2)
-    ax.plot(hold_out.index, forecast, label="Holt-Winters Forecast", color="#D4A574", linewidth=1.2)
+        ax.plot(train.index, train["value"], label="Training Data", color="#4A90A4", linewidth=1.2)
+        ax.plot(hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="#8B6F9E", linewidth=1.2)
+        ax.plot(hold_out.index, forecast, label="Holt-Winters Forecast", color="#D4A574", linewidth=1.2)
     
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Value")
-    ax.legend(loc='best')
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Value")
+        ax.legend(loc='best')
     
-    plt.savefig(output_path, dpi=100, bbox_inches="tight")
-    plt.close()
+        plt.savefig(output_path, dpi=100, bbox_inches="tight")
+        plt.close()
 
 def plot_decomposition(decomposition, output_path: Path):
     """Plot time series decomposition."""
@@ -175,24 +178,25 @@ def plot_decomposition(decomposition, output_path: Path):
     plt.savefig(output_path, dpi=100, bbox_inches="tight")
     plt.close()
 
-def plot_acf_pacf(series: pd.Series, lags: int = 30, output_path: Path = None):
+def plot_acf_pacf(series: pd.Series, lags: int = 30, output_path: Path = None, plot: bool = False):
     """Plot ACF and PACF."""
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    if plot:
+        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     
-    plot_acf(series, lags=lags, ax=axes[0])
-    plot_pacf(series, lags=lags, ax=axes[1])
+        plot_acf(series, lags=lags, ax=axes[0])
+        plot_pacf(series, lags=lags, ax=axes[1])
     
-    for ax in axes:
+        for ax in axes:
     
-        plt.suptitle("Autocorrelation and Partial Autocorrelation Functions", 
-                 fontsize=12, y=0.98, color='0.2')
-    plt.tight_layout()
+            plt.suptitle("Autocorrelation and Partial Autocorrelation Functions", 
+                     fontsize=12, y=0.98, color='0.2')
+        plt.tight_layout()
     
-    if output_path:
-        plt.savefig(output_path, dpi=100, bbox_inches="tight")
-        plt.close()
-    else:
-        plt.show()
+        if output_path:
+            plt.savefig(output_path, dpi=100, bbox_inches="tight")
+            plt.close()
+        else:
+            plt.show()
 
 def plot_residuals_diagnostics(model, output_path: Path):
     """Plot ARIMA residual diagnostics."""
