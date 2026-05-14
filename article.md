@@ -5,7 +5,7 @@ The statsmodels library combines traditional methods with modern Python capabili
 ### Time Series Analysis with `statsmodels` in Python 
 
 #### The statsmodels library combines traditional methods with modern Python capabilities for business forecasting and analysis.
-**`statsmodels`** provides a lot of tools for statistical modeling, including time series. I've written about other libraries so I thought I should include something about the most popular library out there. If you are using ARIMA or SARIMA it is the logical place to start.
+`statsmodels` provides a lot of tools for statistical modeling, including time series. I've written about other libraries so I thought I should include something about the most popular library out there. If you are using ARIMA or SARIMA it is the logical place to start.
 
 `statsmodels` covers univariate and multivariate time series modeling. It includes lots of statistical tests to assess model assumptions and performance. It has "MS Excel" like outputs of key metrics. And it works well with `pandas` and `numpy`.
 
