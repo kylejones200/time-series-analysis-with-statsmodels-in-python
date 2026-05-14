@@ -19,35 +19,43 @@ from src.core import (
 def test_generate_synthetic_data():
     """Test synthetic data generation."""
     df = generate_synthetic_data(n_samples=100, seed=42)
-    assert len(df) == 100
-    assert 'value' in df.columns
-    assert isinstance(df.index, pd.DatetimeIndex)
-
+    if not len(df) == 100:
+        raise AssertionError()
+    if not 'value' in df.columns:
+        raise AssertionError()
+    if not isinstance(df.index, pd.DatetimeIndex):
+        raise AssertionError()
 def test_split_data():
     """Test data splitting."""
     df = generate_synthetic_data(n_samples=100, seed=42)
     train, hold_out = split_data(df, hold_out_days=20)
-    assert len(train) == 80
-    assert len(hold_out) == 20
-    assert len(train) + len(hold_out) == len(df)
-
+    if not len(train) == 80:
+        raise AssertionError()
+    if not len(hold_out) == 20:
+        raise AssertionError()
+    if not len(train) + len(hold_out) == len(df):
+        raise AssertionError()
 def test_stationarity():
     """Test stationarity test."""
     df = generate_synthetic_data(n_samples=100, seed=42)
     result = test_stationarity(df["value"])
-    assert 'adf_statistic' in result
-    assert 'p_value' in result
-    assert 'is_stationary' in result
-    assert isinstance(result['is_stationary'], bool)
-
+    if not 'adf_statistic' in result:
+        raise AssertionError()
+    if not 'p_value' in result:
+        raise AssertionError()
+    if not 'is_stationary' in result:
+        raise AssertionError()
+    if not isinstance(result['is_stationary'], bool):
+        raise AssertionError()
 def test_calculate_mape():
     """Test MAPE calculation."""
     actual = pd.Series([10, 20, 30, 40, 50])
     predicted = pd.Series([11, 19, 31, 39, 51])
     mape = calculate_mape(actual, predicted)
-    assert mape >= 0
-    assert isinstance(mape, float)
-
+    if not mape >= 0:
+        raise AssertionError()
+    if not isinstance(mape, float):
+        raise AssertionError()
 if __name__ == "__main__":
     pytest.main([__file__])
 
