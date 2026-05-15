@@ -1,12 +1,14 @@
 # Description: Short example for Time Series Analysis with statsmodels in Python.
 
 
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
 import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
@@ -14,7 +16,6 @@ from statsmodels.tsa.api import ExponentialSmoothing
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
-from tensorflow.keras.layers import LSTM
 
 np.random.seed(42)
 
@@ -198,6 +199,60 @@ scaler = MinMaxScaler()
 df["value"] = scaler.fit_transform(df["value"].values.reshape(-1, 1))
 
 
+class _LSTMForecaster(nn.Module):
+    """LSTM forecaster (auto-generated PyTorch replacement for Keras Sequential)."""
+    def __init__(self, n_features: int, hidden: int = 50, output_size: int = 1,
+                 n_layers: int = 1, dropout: float = 0.0):
+        super().__init__()
+        self.lstm = nn.LSTM(n_features, hidden, num_layers=n_layers,
+                            batch_first=True, dropout=dropout if n_layers > 1 else 0)
+        self.drop = nn.Dropout(dropout)
+        self.fc = nn.Linear(hidden, output_size)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out, _ = self.lstm(x)
+        return self.fc(self.drop(out[:, -1, :]))
+
+def _train_torch(model: nn.Module, X_train, y_train, *,
+                 epochs: int = 50, batch_size: int = 32,
+                 lr: float = 0.001, validation_split: float = 0.2,
+                 patience: int = 15) -> nn.Module:
+    """Standard training loop replacing  + model.fit()."""
+    X_t = torch.FloatTensor(X_train)
+    y_t = torch.FloatTensor(y_train)
+    if y_t.dim() == 1:
+        y_t = y_t.unsqueeze(1)
+    n_val = max(1, int(len(X_t) * validation_split))
+    X_val, y_val = X_t[-n_val:], y_t[-n_val:]
+    X_tr, y_tr = X_t[:-n_val], y_t[:-n_val]
+    loader = DataLoader(TensorDataset(X_tr, y_tr), batch_size=batch_size, shuffle=True)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    criterion = nn.MSELoss()
+    best, wait = float("inf"), 0
+    for _ in range(epochs):
+        model.train()
+        for xb, yb in loader:
+            optimizer.zero_grad()
+            criterion(model(xb), yb).backward()
+            optimizer.step()
+        model.eval()
+        with torch.no_grad():
+            val_loss = criterion(model(X_val), y_val).item()
+        if val_loss < best:
+            best, wait = val_loss, 0
+        else:
+            wait += 1
+            if wait >= patience:
+                break
+    return model
+
+
+def _predict_torch(model: nn.Module, X_test) -> "np.ndarray":
+    """Replace model.predict()."""
+    model.eval()
+    with torch.no_grad():
+        return model(torch.FloatTensor(X_test)).numpy()
+
 def create_lagged_features(data, lag):
     X, y = [], []
     for i in range(len(data) - lag):
@@ -219,22 +274,21 @@ def main():
     y_train, y_test = y[:train_size], y[train_size:]
 
     # Build, Fit, Predict and Evaluate the LSTM Model
-    model = tf.keras.Sequential(
-        [LSTM(50, activation="relu", input_shape=(lag, 1)), tf.keras.layers.Dense(1)]
+    model = Sequential(
+        [LSTM(50, activation="relu", input_shape=(lag, 1)), nn.Dense(1)]
     )
-    model.compile(optimizer="adam", loss="mse")
-    model.summary()
+        model.summary()
 
-    model.fit(X_train, y_train, epochs=50, batch_size=8, verbose=1, validation_split=0.1)
+    _train_torch(model, X_train, y_train)
 
-    y_pred_lstm = model.predict(X_test)
+    y_pred_lstm = _predict_torch(model, X_test)
     y_pred_lstm_inverse = scaler.inverse_transform(
         y_pred_lstm
     )  # Inverse scaling for comparison
     y_test_inverse = scaler.inverse_transform(y_test.reshape(-1, 1))
 
     # Reconstruct training predictions for plotting
-    train_predictions = model.predict(X_train)
+    train_predictions = _predict_torch(model, X_train)
     train_predictions_inverse = scaler.inverse_transform(train_predictions)
 
     # Calculate MAPE for the test set
