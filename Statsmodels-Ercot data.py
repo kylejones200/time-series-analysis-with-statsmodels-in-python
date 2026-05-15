@@ -1,46 +1,32 @@
-# Description: Short example for Time Series Analysis with statsmodels in Python.
+"""Generated from Jupyter notebook: Statsmodels in Python with Ercot data
+
+Magics and shell lines are commented out. Run with a normal Python interpreter."""
 
 
-import logging
+# --- code cell ---
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from sklearn.metrics import mean_absolute_percentage_error
-from sklearn.preprocessing import MinMaxScaler
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.api import ExponentialSmoothing
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
-from tensorflow.keras.layers import LSTM
 
-np.random.seed(42)
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-
+# --- code cell ---
 
 """
-Generate or Load Time Series Data
+Generate or Load Time Series Data
 Simulate a time series with trend and seasonality
 """
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
-# Generate Simulated Time Series Data
-n = 200
-time = pd.date_range(start="2023-01-01", periods=n, freq="D")
-trend = np.linspace(10, 50, n)
-seasonality = 10 * np.sin(np.linspace(0, 2 * np.pi, n))
-noise = np.random.normal(0, 2, n)
-data = trend + seasonality + noise
-
-# Create a DataFrame; split the data
-df = pd.DataFrame({"date": time, "value": data})
-df.set_index("date", inplace=True)
+df = pd.read_csv("ercot_power_data.csv")
+df["value"] = df["SUM TELEM DSR LOAD"]
+df["date"] = pd.to_datetime(df["SCED Time Stamp"])
+df.set_index(["date"], inplace=True)
 
 hold_out_days = 30
 train = df.iloc[:-hold_out_days]
@@ -53,82 +39,31 @@ plt.plot(
     hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="Green"
 )
 
-plt.title("Simulated Time Series with Training and Hold-Out Sets")
+plt.title("ERCOT Load Training and Hold-Out Sets")
 plt.xlabel("Date")
 plt.ylabel("Value")
 plt.legend()
-plt.savefig("simulated_time_series.png")
+plt.grid()
+plt.savefig("ercot_time_series.png")
 plt.show()
 
-"""
-Time Series Decomposition
-Use seasonal_decompose to split the series into trend, seasonal, and residual components.
-"""
 
-# Decompose the time series
-decomposition = seasonal_decompose(df["value"], model="additive", period=30)
+# --- code cell ---
 
-# Plot the components
-fig = decomposition.plot()
-fig.set_size_inches(10, 8)  # Adjust the figure size
-plt.suptitle("Time Series Decomposition", fontsize=16, y=0.95)  # Adjust title position
-plt.tight_layout(rect=[0, 0, 1, 0.96])  # Prevent overlap of title with subplots
-plt.savefig("time_series_decomposition.png")
-plt.show()
+df.dtypes
+df["date"] = pd.to_datetime(df["SCED Time Stamp"])
+df.set_index(["date"], inplace=True)
 
-"""
-Check for Stationarity
-Use the Augmented Dickey-Fuller (ADF) test to assess stationarity.
-"""
 
-# Perform ADF test
-result = adfuller(df["value"])
-logger.info(f"ADF Statistic: {result[0]:.4f}")
-logger.info(f"P-Value: {result[1]:.4f}")
-if result[1] > 0.05:
-    logger.info("The time series is non-stationary.")
-else:
-    logger.info("The time series is stationary.")
-
-# ADF Statistic: -0.5022
-# P-Value: 0.8916
-# The time series is non-stationary.
-
-"""
-Autocorrelation and Partial Autocorrelation
-Visualize the ACF and PACF to determine lag dependencies.
-"""
-
-# Plot ACF and PACF
-fig, axes = plt.subplots(1, 2, figsize=(12, 6))
-plot_acf(df["value"], lags=30, ax=axes[0])
-plot_pacf(df["value"], lags=30, ax=axes[1])
-plt.suptitle("ACF and PACF Plots", fontsize=16)
-plt.savefig("acf_pacf_plots.png")
-plt.show()
-
-"""
-Fit an ARIMA Model
-Fit an ARIMA model to the data for forecasting.
-"""
-
-# Fit an ARIMA(2,1,2) model
-model = ARIMA(df["value"], order=(2, 1, 2))
-arima_result = model.fit()
-
-logger.info(arima_result.summary())
-# Plot the residuals
-arima_result.plot_diagnostics(figsize=(10, 6))
-plt.savefig("arima_residuals_diagnostics.png")
-plt.show()
+# --- code cell ---
 
 """
 ARIMA
-Forecast the 30 days that were held out
 """
+from statsmodels.tsa.arima.model import ARIMA
 
 # Fit ARIMA Model on Training Data
-model = ARIMA(train["value"], order=(2, 1, 2), freq="D")  # Explicitly set freq="D"
+model = ARIMA(train["value"], order=(2, 1, 2))
 arima_result = model.fit()
 
 # Forecast Future Values for Hold-Out Period
@@ -139,7 +74,7 @@ forecast_ci = forecast.conf_int()
 
 # Calculate MAPE on Hold-Out Set
 mape = mean_absolute_percentage_error(hold_out["value"], forecast_mean)
-logger.info(f"Mean Absolute Percentage Error (MAPE): {mape:.3%}")
+print(f"Mean Absolute Percentage Error (MAPE): {mape:.3%}")
 
 # Plot the Results
 plt.figure(figsize=(10, 6))
@@ -160,8 +95,90 @@ plt.title(f"ARIMA Forecast (MAPE: {mape:.3%})")
 plt.xlabel("Date")
 plt.ylabel("Value")
 plt.legend()
+plt.grid()
 plt.savefig("arima_forecast_holdout.png")
 plt.show()
+
+
+# --- code cell ---
+
+"""
+Time Series Decomposition
+Use seasonal_decompose to split the series into trend, seasonal, and residual components.
+"""
+import matplotlib.pyplot as plt
+from statsmodels.tsa.seasonal import seasonal_decompose
+
+# Decompose the time series
+decomposition = seasonal_decompose(df["value"], model="additive", period=30)
+
+# Plot the components
+fig = decomposition.plot()
+fig.set_size_inches(10, 8)  # Adjust the figure size
+plt.suptitle("Time Series Decomposition", fontsize=16, y=0.95)  # Adjust title position
+plt.tight_layout(rect=[0, 0, 1, 0.96])  # Prevent overlap of title with subplots
+plt.savefig("time_series_decomposition.png")
+plt.show()
+
+
+# --- code cell ---
+
+"""
+Check for Stationarity
+Use the Augmented Dickey-Fuller (ADF) test to assess stationarity.
+"""
+
+from statsmodels.tsa.stattools import adfuller
+
+# Perform ADF test
+result = adfuller(df["value"])
+print(f"ADF Statistic: {result[0]:.4f}")
+print(f"P-Value: {result[1]:.4f}")
+if result[1] > 0.05:
+    print("The time series is non-stationary.")
+else:
+    print("The time series is stationary.")
+
+
+# --- code cell ---
+
+"""
+Autocorrelation and Partial Autocorrelation
+Visualize the ACF and PACF to determine lag dependencies.
+"""
+
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+# Plot ACF and PACF
+fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+plot_acf(df["value"], lags=30, ax=axes[0])
+plot_pacf(df["value"], lags=30, ax=axes[1])
+plt.suptitle("ACF and PACF Plots", fontsize=16)
+plt.savefig("acf_pacf_plots.png")
+plt.show()
+
+
+# --- code cell ---
+
+"""
+Fit an ARIMA Model
+Fit an ARIMA model to the data for forecasting.
+"""
+
+from statsmodels.tsa.arima.model import ARIMA
+
+# Fit an ARIMA(2,1,2) model
+model = ARIMA(df["value"], order=(2, 1, 2))
+arima_result = model.fit()
+
+print(arima_result.summary())
+# Plot the residuals
+arima_result.plot_diagnostics(figsize=(10, 6))
+plt.savefig("arima_residuals_diagnostics.png")
+plt.show()
+
+
+# --- code cell ---
 
 """
 Holt-Winters Exponential Smoothing
@@ -176,7 +193,7 @@ hw_forecast = hw_model.forecast(steps=hold_out_days)
 
 # Calculate MAPE on Hold-Out Set
 mape_hw = mean_absolute_percentage_error(hold_out["value"], hw_forecast)
-logger.info(f"Holt-Winters MAPE: {mape_hw:.3%}")
+print(f"Holt-Winters MAPE: {mape_hw:.3%}")
 
 # Plot the Results
 plt.figure(figsize=(10, 6))
@@ -189,13 +206,30 @@ plt.title(f"Holt-Winters Forecast \n MAPE: {mape_hw:.3%}")
 plt.xlabel("Date")
 plt.ylabel("Value")
 plt.legend()
+plt.grid()
 plt.savefig("holt_winters_forecast.png")
 plt.show()
 
 
+# --- code cell ---
+
+import tensorflow as tf
+from sklearn.metrics import mean_absolute_percentage_error
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.layers import LSTM
+
 # Prepare Data for LSTM
+# Split data first before scaling
+lag = 10  # Number of past observations to use for prediction
+train_size = int(0.85 * (len(df) - lag))
+df_train = df.iloc[: train_size + lag].copy()
+df_test = df.iloc[train_size + lag :].copy()
+
+# Fit scaler on training data only
 scaler = MinMaxScaler()
-df["value"] = scaler.fit_transform(df["value"].values.reshape(-1, 1))
+scaler.fit(df_train["value"].values.reshape(-1, 1))
+df_train_scaled = scaler.transform(df_train["value"].values.reshape(-1, 1))
+df_test_scaled = scaler.transform(df_test["value"].values.reshape(-1, 1))
 
 
 def create_lagged_features(data, lag):
@@ -208,15 +242,12 @@ def create_lagged_features(data, lag):
 
 
 def main():
-    lag = 10  # Number of past observations to use for prediction
-    X, y = create_lagged_features(df["value"].values, lag)
+    # Create lagged features on scaled data
+    X_train, y_train = create_lagged_features(df_train_scaled.flatten(), lag)
+    X_test, y_test = create_lagged_features(df_test_scaled.flatten(), lag)
 
-    X = X.reshape(X.shape[0], X.shape[1], 1)
-
-    # Split into training and testing sets
-    train_size = int(0.85 * len(X))
-    X_train, X_test = X[:train_size], X[train_size:]
-    y_train, y_test = y[:train_size], y[train_size:]
+    X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+    X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
 
     # Build, Fit, Predict and Evaluate the LSTM Model
     model = tf.keras.Sequential(
@@ -239,27 +270,23 @@ def main():
 
     # Calculate MAPE for the test set
     mape = mean_absolute_percentage_error(y_test_inverse, y_pred_lstm_inverse)
-    logger.info(f"LSTM MAPE: {mape:.3%}")
+    print(f"LSTM MAPE: {mape:.3%}")
 
     # Plot the Results
     plt.figure(figsize=(12, 8))
-    plt.plot(
-        df.index,
-        scaler.inverse_transform(df["value"].values.reshape(-1, 1)),
-        label="Actual Data",
-        color="Blue",
-    )
-    train_index = df.index[lag : train_size + lag]
+    plt.plot(df.index, df["value"].values, label="Actual Data", color="Blue")
+    train_index = df_train.index[lag:]
     plt.plot(
         train_index, train_predictions_inverse, label="Training Predictions", color="Orange"
     )
-    test_index = df.index[train_size + lag :]
+    test_index = df_test.index[lag:]
     plt.plot(test_index, y_test_inverse, label="Hold-Out (True Values)", color="Green")
     plt.plot(test_index, y_pred_lstm_inverse, label="Testing Predictions", color="Red")
     plt.title(f"LSTM Forecast. MAPE: {mape:.3%}")
     plt.xlabel("Date")
     plt.ylabel("Value")
     plt.legend()
+    plt.grid()
     plt.savefig("LSTM_forecast_with_holdout.png")
     plt.show()
 
