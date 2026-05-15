@@ -5,11 +5,11 @@
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.api import SimpleExpSmoothing, Holt, ExponentialSmoothing
+from statsmodels.tsa.api import ExponentialSmoothing
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
-from statsmodels.tsa.stattools import adfuller, acf, pacf
+from statsmodels.tsa.stattools import adfuller
 from tensorflow.keras.layers import LSTM
 import logging
 import matplotlib.pyplot as plt

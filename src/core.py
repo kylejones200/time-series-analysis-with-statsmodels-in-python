@@ -3,13 +3,12 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from typing import Tuple, Dict, Any
+from typing import Any
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
 from sklearn.metrics import mean_absolute_percentage_error
-from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import logging
 
@@ -42,13 +41,13 @@ def load_data(data_path: Path = None) -> pd.DataFrame:
         df = generate_synthetic_data()
     return df
 
-def split_data(df: pd.DataFrame, hold_out_days: int = 30) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def split_data(df: pd.DataFrame, hold_out_days: int = 30) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Split data into training and hold-out sets."""
     train = df.iloc[:-hold_out_days]
     hold_out = df.iloc[-hold_out_days:]
     return train, hold_out
 
-def test_stationarity(series: pd.Series) -> Dict[str, Any]:
+def test_stationarity(series: pd.Series) -> dict[str, Any]:
     """Perform Augmented Dickey-Fuller test for stationarity."""
     result = adfuller(series)
     return {
@@ -62,7 +61,7 @@ def decompose_series(series: pd.Series, model: str = "additive", period: int = 3
     """Decompose time series into trend, seasonal, and residual components."""
     return seasonal_decompose(series, model=model, period=period)
 
-def fit_arima(train_data: pd.Series, order: Tuple[int, int, int] = (2, 1, 2), freq: str = "D"):
+def fit_arima(train_data: pd.Series, order: tuple[int, int, int] = (2, 1, 2), freq: str = "D"):
     """Fit ARIMA model to training data."""
     model = ARIMA(train_data, order=order, freq=freq)
     return model.fit()
@@ -116,7 +115,7 @@ def plot_time_series(
 def plot_arima_forecast(
     train: pd.DataFrame,
     hold_out: pd.DataFrame,
-    forecast: Dict[str, Any],
+    forecast: dict[str, Any],
     mape: float,
     output_path: Path
 ):

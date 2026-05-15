@@ -2,8 +2,6 @@
 
 import pytest
 import pandas as pd
-import numpy as np
-from pathlib import Path
 from src.core import (
 # import logging
 
@@ -21,7 +19,7 @@ def test_generate_synthetic_data():
     df = generate_synthetic_data(n_samples=100, seed=42)
     if not len(df) == 100:
         raise AssertionError()
-    if not 'value' in df.columns:
+    if 'value' not in df.columns:
         raise AssertionError()
     if not isinstance(df.index, pd.DatetimeIndex):
         raise AssertionError()
@@ -39,11 +37,11 @@ def test_stationarity():
     """Test stationarity test."""
     df = generate_synthetic_data(n_samples=100, seed=42)
     result = test_stationarity(df["value"])
-    if not 'adf_statistic' in result:
+    if 'adf_statistic' not in result:
         raise AssertionError()
-    if not 'p_value' in result:
+    if 'p_value' not in result:
         raise AssertionError()
-    if not 'is_stationary' in result:
+    if 'is_stationary' not in result:
         raise AssertionError()
     if not isinstance(result['is_stationary'], bool):
         raise AssertionError()
