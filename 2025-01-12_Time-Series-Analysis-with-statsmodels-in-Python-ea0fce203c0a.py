@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+np.random.seed(42)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -31,7 +32,6 @@ Simulate a time series with trend and seasonality
 """
 
 # Generate Simulated Time Series Data
-np.random.seed(42)
 n = 200
 time = pd.date_range(start="2023-01-01", periods=n, freq="D")
 trend = np.linspace(10, 50, n)
