@@ -35,3 +35,11 @@ Edit `config.yaml` to customize:
 - By default, the script generates synthetic data. To use your own data, provide a CSV file with 'date' and 'value' columns via `--data-path`.
 - The ARIMA model requires sufficient data points for reliable results (recommended: 100+ observations).
 - Stationarity tests assume the time series has sufficient length for meaningful statistical inference.
+
+## Disclaimer
+
+Educational/demo code only. Not financial, safety, or engineering advice. Use at your own risk. Verify results independently before any production or operational use.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
