@@ -277,7 +277,7 @@ def main():
     model = Sequential(
         [LSTM(50, activation="relu", input_shape=(lag, 1)), nn.Dense(1)]
     )
-        model.summary()
+    model.summary()
 
     _train_torch(model, X_train, y_train)
 

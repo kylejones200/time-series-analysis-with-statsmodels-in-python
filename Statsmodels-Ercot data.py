@@ -24,7 +24,7 @@ def create_lagged_features(data, lag):
     return (np.array(X), np.array(y))
 
 
-def main() -> None:
+def plot_the_data() -> None:
     "\nGenerate or Load Time Series\xa0Data\nSimulate a time series with trend and seasonality\n"
 
     df = pd.read_csv("ercot_power_data.csv")
@@ -63,12 +63,16 @@ def main() -> None:
 
     plt.show()
 
+
+def notebook_step_003() -> None:
     df.dtypes
 
     df["date"] = pd.to_datetime(df["SCED Time Stamp"])
 
     df.set_index(["date"], inplace=True)
 
+
+def fit_arima_model_on_training_data() -> None:
     "\nARIMA\n"
 
     model = ARIMA(train["value"], order=(2, 1, 2))
@@ -120,6 +124,8 @@ def main() -> None:
 
     plt.show()
 
+
+def decompose_the_time_series() -> None:
     "\nTime Series Decomposition\nUse seasonal_decompose to split the series into trend, seasonal, and residual components.\n"
 
     decomposition = seasonal_decompose(df["value"], model="additive", period=30)
@@ -136,6 +142,8 @@ def main() -> None:
 
     plt.show()
 
+
+def perform_adf_test() -> None:
     "\nCheck for Stationarity\nUse the Augmented Dickey-Fuller (ADF) test to assess stationarity.\n"
 
     result = adfuller(df["value"])
@@ -149,6 +157,8 @@ def main() -> None:
     else:
         print("The time series is stationary.")
 
+
+def plot_acf_and_pacf() -> None:
     "\nAutocorrelation and Partial Autocorrelation\nVisualize the ACF and PACF to determine lag dependencies.\n"
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
@@ -163,6 +173,8 @@ def main() -> None:
 
     plt.show()
 
+
+def fit_an_arima_2_1_2_model() -> None:
     "\nFit an ARIMA\xa0Model\nFit an ARIMA model to the data for forecasting.\n"
 
     model = ARIMA(df["value"], order=(2, 1, 2))
@@ -177,6 +189,8 @@ def main() -> None:
 
     plt.show()
 
+
+def apply_holt_winters_exponential_smoothing() -> None:
     "\nHolt-Winters Exponential Smoothing\n"
 
     hw_model = ExponentialSmoothing(
@@ -213,6 +227,8 @@ def main() -> None:
 
     plt.show()
 
+
+def prepare_data_for_lstm() -> None:
     lag = 10
 
     train_size = int(0.85 * (len(df) - lag))
@@ -295,6 +311,18 @@ def main() -> None:
     plt.savefig("LSTM_forecast_with_holdout.png")
 
     plt.show()
+
+
+def main() -> None:
+    plot_the_data()
+    notebook_step_003()
+    fit_arima_model_on_training_data()
+    decompose_the_time_series()
+    perform_adf_test()
+    plot_acf_and_pacf()
+    fit_an_arima_2_1_2_model()
+    apply_holt_winters_exponential_smoothing()
+    prepare_data_for_lstm()
 
 
 if __name__ == "__main__":
