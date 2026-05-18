@@ -27,7 +27,7 @@ logging.basicConfig(
 )
 
 
-def load_config(config_path: Path = None) -> dict:
+def load_config(config_path: Path | None = None) -> dict:
     """Load configuration from YAML file."""
     if config_path is None:
         config_path = Path(__file__).parent / "config.yaml"
@@ -48,7 +48,6 @@ def main():
         "--output-dir", type=Path, default=None, help="Output directory for plots"
     )
     args = parser.parse_args()
-
     config = load_config(args.config)
     output_dir = (
         Path(args.output_dir)
@@ -56,19 +55,14 @@ def main():
         else Path(config["output"]["figures_dir"])
     )
     output_dir.mkdir(exist_ok=True)
-
     data_path = (
         args.data_path
         if args.data_path
         else (Path(config["data"]["source"]) if config["data"]["source"] else None)
     )
-
     df = load_data(data_path)
-
     train, hold_out = split_data(df, config["model"]["hold_out_days"])
-
     plot_time_series(df, train, hold_out, output_dir / "simulated_time_series.png")
-
     if config["analysis"]["run_stationarity_test"]:
         stationarity = test_stationarity(df["value"])
         logging.info(f"ADF Statistic: {stationarity['adf_statistic']:.4f}")
@@ -95,17 +89,14 @@ def main():
             order=tuple(config["model"]["arima_order"]),
             freq=config["data"]["frequency"],
         )
-
         forecast = forecast_arima(
             arima_model, config["model"]["hold_out_days"], hold_out.index
         )
         mape = calculate_mape(hold_out["value"], forecast["mean"])
         logging.info(f"ARIMA MAPE: {mape:.3%}")
-
         plot_arima_forecast(
             train, hold_out, forecast, mape, output_dir / "arima_forecast_holdout.png"
         )
-
         if config["analysis"]["run_residuals_diagnostics"]:
             plot_residuals_diagnostics(
                 arima_model, output_dir / "arima_residuals_diagnostics.png"
@@ -116,7 +107,6 @@ def main():
         hw_forecast = forecast_holt_winters(hw_model, config["model"]["hold_out_days"])
         mape_hw = calculate_mape(hold_out["value"], hw_forecast)
         logging.info(f"Holt-Winters MAPE: {mape_hw:.3%}")
-
         plot_holt_winters_forecast(
             train,
             hold_out,

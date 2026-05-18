@@ -1,14 +1,12 @@
 # Description: Short example for Time Series Analysis with statsmodels in Python.
 
-
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
 import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import torch
+import torch.nn as nn
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
@@ -16,6 +14,7 @@ from statsmodels.tsa.api import ExponentialSmoothing
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
+from torch.utils.data import DataLoader, TensorDataset
 
 np.random.seed(42)
 
@@ -24,7 +23,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-
 
 """
 Generate or Load Time Series Data
@@ -193,7 +191,6 @@ plt.legend()
 plt.savefig("holt_winters_forecast.png")
 plt.show()
 
-
 # Prepare Data for LSTM
 scaler = MinMaxScaler()
 df["value"] = scaler.fit_transform(df["value"].values.reshape(-1, 1))
@@ -201,11 +198,23 @@ df["value"] = scaler.fit_transform(df["value"].values.reshape(-1, 1))
 
 class _LSTMForecaster(nn.Module):
     """LSTM forecaster (auto-generated PyTorch replacement for Keras Sequential)."""
-    def __init__(self, n_features: int, hidden: int = 50, output_size: int = 1,
-                 n_layers: int = 1, dropout: float = 0.0):
+
+    def __init__(
+        self,
+        n_features: int,
+        hidden: int = 50,
+        output_size: int = 1,
+        n_layers: int = 1,
+        dropout: float = 0.0,
+    ):
         super().__init__()
-        self.lstm = nn.LSTM(n_features, hidden, num_layers=n_layers,
-                            batch_first=True, dropout=dropout if n_layers > 1 else 0)
+        self.lstm = nn.LSTM(
+            n_features,
+            hidden,
+            num_layers=n_layers,
+            batch_first=True,
+            dropout=dropout if n_layers > 1 else 0,
+        )
         self.drop = nn.Dropout(dropout)
         self.fc = nn.Linear(hidden, output_size)
 
@@ -213,10 +222,18 @@ class _LSTMForecaster(nn.Module):
         out, _ = self.lstm(x)
         return self.fc(self.drop(out[:, -1, :]))
 
-def _train_torch(model: nn.Module, X_train, y_train, *,
-                 epochs: int = 50, batch_size: int = 32,
-                 lr: float = 0.001, validation_split: float = 0.2,
-                 patience: int = 15) -> nn.Module:
+
+def _train_torch(
+    model: nn.Module,
+    X_train,
+    y_train,
+    *,
+    epochs: int = 50,
+    batch_size: int = 32,
+    lr: float = 0.001,
+    validation_split: float = 0.2,
+    patience: int = 15,
+) -> nn.Module:
     """Standard training loop replacing  + model.fit()."""
     X_t = torch.FloatTensor(X_train)
     y_t = torch.FloatTensor(y_train)
@@ -253,6 +270,7 @@ def _predict_torch(model: nn.Module, X_test) -> "np.ndarray":
     with torch.no_grad():
         return model(torch.FloatTensor(X_test)).numpy()
 
+
 def create_lagged_features(data, lag):
     X, y = [], []
     for i in range(len(data) - lag):
@@ -261,40 +279,29 @@ def create_lagged_features(data, lag):
     return np.array(X), np.array(y)
 
 
-
 def main():
     lag = 10  # Number of past observations to use for prediction
     X, y = create_lagged_features(df["value"].values, lag)
-
     X = X.reshape(X.shape[0], X.shape[1], 1)
-
     # Split into training and testing sets
     train_size = int(0.85 * len(X))
     X_train, X_test = X[:train_size], X[train_size:]
     y_train, y_test = y[:train_size], y[train_size:]
-
     # Build, Fit, Predict and Evaluate the LSTM Model
-    model = Sequential(
-        [LSTM(50, activation="relu", input_shape=(lag, 1)), nn.Dense(1)]
-    )
+    model = Sequential([LSTM(50, activation="relu", input_shape=(lag, 1)), nn.Dense(1)])
     model.summary()
-
     _train_torch(model, X_train, y_train)
-
     y_pred_lstm = _predict_torch(model, X_test)
     y_pred_lstm_inverse = scaler.inverse_transform(
         y_pred_lstm
     )  # Inverse scaling for comparison
     y_test_inverse = scaler.inverse_transform(y_test.reshape(-1, 1))
-
     # Reconstruct training predictions for plotting
     train_predictions = _predict_torch(model, X_train)
     train_predictions_inverse = scaler.inverse_transform(train_predictions)
-
     # Calculate MAPE for the test set
     mape = mean_absolute_percentage_error(y_test_inverse, y_pred_lstm_inverse)
     logger.info(f"LSTM MAPE: {mape:.3%}")
-
     # Plot the Results
     plt.figure(figsize=(12, 8))
     plt.plot(
@@ -305,7 +312,10 @@ def main():
     )
     train_index = df.index[lag : train_size + lag]
     plt.plot(
-        train_index, train_predictions_inverse, label="Training Predictions", color="Orange"
+        train_index,
+        train_predictions_inverse,
+        label="Training Predictions",
+        color="Orange",
     )
     test_index = df.index[train_size + lag :]
     plt.plot(test_index, y_test_inverse, label="Hold-Out (True Values)", color="Green")

@@ -9,7 +9,7 @@ from src.core import (
     # logging.basicConfig(level=logging.INFO, format='%(message)s')
     generate_synthetic_data,
     split_data,
-    test_stationarity,
+    test_stationarity as check_stationarity,
 )
 
 
@@ -39,7 +39,7 @@ def test_split_data():
 def test_stationarity():
     """Test stationarity test."""
     df = generate_synthetic_data(n_samples=100, seed=42)
-    result = test_stationarity(df["value"])
+    result = check_stationarity(df["value"])
     if "adf_statistic" not in result:
         raise AssertionError()
     if "p_value" not in result:
