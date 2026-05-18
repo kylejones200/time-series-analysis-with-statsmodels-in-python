@@ -2,6 +2,14 @@
 
 This project demonstrates time series analysis using the statsmodels library in Python, including ARIMA modeling, Holt-Winters exponential smoothing, decomposition, and stationarity testing.
 
+## Business context
+
+The statsmodels library combines traditional methods with modern Python capabilities for business forecasting and analysis.
+
+`statsmodels` provides a lot of tools for statistical modeling, including time series. I've written about other libraries so I thought I should include something about the most popular library out there. If you are using ARIMA or SARIMA it is the logical place to start.
+
+`statsmodels` covers univariate and multivariate time series modeling. It includes lots of statistical tests to assess model assumptions and performance. It has "MS Excel" like outputs of key metrics. And it works well with `pandas` and `numpy`.
+
 ## Article
 
 Medium article: [Time Series Analysis with statsmodels in Python](https://medium.com/@kylejones_47003/time-series-analysis-with-statsmodels-in-python-ea0fce203c0a)
