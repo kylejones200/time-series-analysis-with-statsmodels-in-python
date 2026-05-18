@@ -82,7 +82,7 @@ def plot_time_series(df: pd.DataFrame, train: pd.DataFrame, hold_out: pd.DataFra
     plt.savefig(output_path, dpi=100, bbox_inches='tight')
     plt.close()
 
-def plot_arima_forecast(train: pd.DataFrame, hold_out: pd.DataFrame, forecast: dict[str, Any], mape: float, output_path: Path, plot: bool = False):
+def plot_arima_forecast(train: pd.DataFrame, hold_out: pd.DataFrame, forecast: dict[str, Any], mape: float, output_path: Path, plot: bool=False):
     """Plot ARIMA forecast results."""
     if not plot:
         return
@@ -97,7 +97,7 @@ def plot_arima_forecast(train: pd.DataFrame, hold_out: pd.DataFrame, forecast: d
     plt.savefig(output_path, dpi=100, bbox_inches='tight')
     plt.close()
 
-def plot_holt_winters_forecast(train: pd.DataFrame, hold_out: pd.DataFrame, forecast: pd.Series, mape: float, output_path: Path, plot: bool = False):
+def plot_holt_winters_forecast(train: pd.DataFrame, hold_out: pd.DataFrame, forecast: pd.Series, mape: float, output_path: Path, plot: bool=False):
     """Plot Holt-Winters forecast results."""
     if not plot:
         return
