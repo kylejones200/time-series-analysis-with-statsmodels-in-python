@@ -2,6 +2,9 @@
 
 import logging
 
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -45,155 +48,26 @@ hold_out_days = 30
 train = df.iloc[:-hold_out_days]
 hold_out = df.iloc[-hold_out_days:]
 
-# Plot the Data
-plt.figure(figsize=(10, 6))
-plt.plot(df.index, df["value"], label="Full Dataset", color="Blue")
-plt.plot(
-    hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="Green"
-)
 
-plt.title("Simulated Time Series with Training and Hold-Out Sets")
-plt.xlabel("Date")
-plt.ylabel("Value")
-plt.legend()
-plt.savefig("simulated_time_series.png")
-plt.show()
+def _run_statsmodels_demos() -> None:
+    result = adfuller(df["value"])
+    logger.info("ADF p-value: %.4f", result[1])
+    arima_result = ARIMA(train["value"], order=(1, 1, 0)).fit()
+    forecast_mean = arima_result.get_forecast(steps=hold_out_days).predicted_mean
+    mape = mean_absolute_percentage_error(hold_out["value"], forecast_mean)
+    logger.info("ARIMA hold-out MAPE: %.3f%%", mape * 100)
+    hw_model = ExponentialSmoothing(
+        train["value"], trend="add", seasonal="add", seasonal_periods=30
+    ).fit()
+    hw_forecast = hw_model.forecast(steps=hold_out_days)
+    mape_hw = mean_absolute_percentage_error(hold_out["value"], hw_forecast)
+    logger.info("Holt-Winters MAPE: %.3f%%", mape_hw * 100)
 
-"""
-Time Series Decomposition
-Use seasonal_decompose to split the series into trend, seasonal, and residual components.
-"""
 
-# Decompose the time series
-decomposition = seasonal_decompose(df["value"], model="additive", period=30)
-
-# Plot the components
-fig = decomposition.plot()
-fig.set_size_inches(10, 8)  # Adjust the figure size
-plt.suptitle("Time Series Decomposition", fontsize=16, y=0.95)  # Adjust title position
-plt.tight_layout(rect=[0, 0, 1, 0.96])  # Prevent overlap of title with subplots
-plt.savefig("time_series_decomposition.png")
-plt.show()
-
-"""
-Check for Stationarity
-Use the Augmented Dickey-Fuller (ADF) test to assess stationarity.
-"""
-
-# Perform ADF test
-result = adfuller(df["value"])
-logger.info(f"ADF Statistic: {result[0]:.4f}")
-logger.info(f"P-Value: {result[1]:.4f}")
-if result[1] > 0.05:
-    logger.info("The time series is non-stationary.")
-else:
-    logger.info("The time series is stationary.")
-
-# ADF Statistic: -0.5022
-# P-Value: 0.8916
-# The time series is non-stationary.
-
-"""
-Autocorrelation and Partial Autocorrelation
-Visualize the ACF and PACF to determine lag dependencies.
-"""
-
-# Plot ACF and PACF
-fig, axes = plt.subplots(1, 2, figsize=(12, 6))
-plot_acf(df["value"], lags=30, ax=axes[0])
-plot_pacf(df["value"], lags=30, ax=axes[1])
-plt.suptitle("ACF and PACF Plots", fontsize=16)
-plt.savefig("acf_pacf_plots.png")
-plt.show()
-
-"""
-Fit an ARIMA Model
-Fit an ARIMA model to the data for forecasting.
-"""
-
-# Fit an ARIMA(2,1,2) model
-model = ARIMA(df["value"], order=(2, 1, 2))
-arima_result = model.fit()
-
-logger.info(arima_result.summary())
-# Plot the residuals
-arima_result.plot_diagnostics(figsize=(10, 6))
-plt.savefig("arima_residuals_diagnostics.png")
-plt.show()
-
-"""
-ARIMA
-Forecast the 30 days that were held out
-"""
-
-# Fit ARIMA Model on Training Data
-model = ARIMA(train["value"], order=(2, 1, 2), freq="D")  # Explicitly set freq="D"
-arima_result = model.fit()
-
-# Forecast Future Values for Hold-Out Period
-forecast = arima_result.get_forecast(steps=hold_out_days)
-forecast_index = hold_out.index  # Use the same index as the hold-out set
-forecast_mean = forecast.predicted_mean
-forecast_ci = forecast.conf_int()
-
-# Calculate MAPE on Hold-Out Set
-mape = mean_absolute_percentage_error(hold_out["value"], forecast_mean)
-logger.info(f"Mean Absolute Percentage Error (MAPE): {mape:.3%}")
-
-# Plot the Results
-plt.figure(figsize=(10, 6))
-plt.plot(train.index, train["value"], label="Training Data", color="Blue")
-plt.plot(
-    hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="Green"
-)
-plt.plot(forecast_index, forecast_mean, label="Forecast", color="Red")
-plt.fill_between(
-    forecast_index,
-    forecast_ci.iloc[:, 0],
-    forecast_ci.iloc[:, 1],
-    color="Red",
-    alpha=0.2,
-    label="Confidence Interval",
-)
-plt.title(f"ARIMA Forecast (MAPE: {mape:.3%})")
-plt.xlabel("Date")
-plt.ylabel("Value")
-plt.legend()
-plt.savefig("arima_forecast_holdout.png")
-plt.show()
-
-"""
-Holt-Winters Exponential Smoothing
-"""
-
-# Apply Holt-Winters Exponential Smoothing
-hw_model = ExponentialSmoothing(
-    train["value"], seasonal="add", seasonal_periods=30
-).fit()
-
-hw_forecast = hw_model.forecast(steps=hold_out_days)
-
-# Calculate MAPE on Hold-Out Set
-mape_hw = mean_absolute_percentage_error(hold_out["value"], hw_forecast)
-logger.info(f"Holt-Winters MAPE: {mape_hw:.3%}")
-
-# Plot the Results
-plt.figure(figsize=(10, 6))
-plt.plot(train.index, train["value"], label="Training Data", color="Blue")
-plt.plot(
-    hold_out.index, hold_out["value"], label="Hold-Out (True Values)", color="Green"
-)
-plt.plot(hold_out.index, hw_forecast, label="Holt-Winters Forecast", color="Red")
-plt.title(f"Holt-Winters Forecast \n MAPE: {mape_hw:.3%}")
-plt.xlabel("Date")
-plt.ylabel("Value")
-plt.legend()
-plt.savefig("holt_winters_forecast.png")
-plt.show()
-
-# Prepare Data for LSTM
 scaler = MinMaxScaler()
-df["value"] = scaler.fit_transform(df["value"].values.reshape(-1, 1))
+df_scaled = df.copy()
+df_scaled["value"] = scaler.fit_transform(df["value"].values.reshape(-1, 1))
+df = df_scaled
 
 
 class _LSTMForecaster(nn.Module):
@@ -288,9 +162,8 @@ def main():
     X_train, X_test = X[:train_size], X[train_size:]
     y_train, y_test = y[:train_size], y[train_size:]
     # Build, Fit, Predict and Evaluate the LSTM Model
-    model = Sequential([LSTM(50, activation="relu", input_shape=(lag, 1)), nn.Dense(1)])
-    model.summary()
-    _train_torch(model, X_train, y_train)
+    model = _LSTMForecaster(n_features=1, hidden=50, n_layers=1)
+    _train_torch(model, X_train, y_train, epochs=5)
     y_pred_lstm = _predict_torch(model, X_test)
     y_pred_lstm_inverse = scaler.inverse_transform(
         y_pred_lstm
@@ -325,8 +198,9 @@ def main():
     plt.ylabel("Value")
     plt.legend()
     plt.savefig("LSTM_forecast_with_holdout.png")
-    plt.show()
+    plt.close()
 
 
 if __name__ == "__main__":
+    _run_statsmodels_demos()
     main()
